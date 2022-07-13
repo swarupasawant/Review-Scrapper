@@ -22,25 +22,30 @@ def index():
             flipkartPage = uClient.read()
             uClient.close()
             flipkart_html = bs(flipkartPage, "html.parser")
-            bigboxes = flipkart_html.findAll("div", {"class": "_1AtVbE col-12-12"})
-            del bigboxes[0:3]
+            bigboxes = flipkart_html.findAll("div", {"class": "_4ddWXP"})
+            # del bigboxes[0:3]
             box = bigboxes[0]
-            productLink = "https://www.flipkart.com" + box.div.div.div.a['href']
+            firstbox= box.find_all("a")
+            link= firstbox[1]['href']
+            productLink = "https://www.flipkart.com" + link
+            print("productLink",productLink)
             prodRes = requests.get(productLink)
             prodRes.encoding='utf-8'
             prod_html = bs(prodRes.text, "html.parser")
-            print(prod_html)
-            commentboxes = prod_html.find_all('div', {'class': "_16PBlm"})
+            # print(prod_html)
+            commentboxes = prod_html.find_all('div', {'class': "col _2wzgFH _1QgsS5"})
 
             filename = searchString + ".csv"
             fw = open(filename, "w")
-            headers = "Product, Customer Name, Rating, Heading, Comment \n"
+            headers = "Product, Customer Name, Rating, Comment \n"
             fw.write(headers)
+            
             reviews = []
             for commentbox in commentboxes:
                 try:
                     #name.encode(encoding='utf-8')
-                    name = commentbox.div.div.find_all('p', {'class': '_2sc7ZR _2V5EHH'})[0].text
+                    name = commentbox.find_all('p', {'class':'_2sc7ZR _2V5EHH _1QgsS5'})[0].text
+                    print("name",name)
 
                 except:
                     name = 'No Name'
@@ -48,6 +53,7 @@ def index():
                 try:
                     #rating.encode(encoding='utf-8')
                     rating = commentbox.div.div.div.div.text
+                    print("rating",rating)
 
 
                 except:
@@ -60,16 +66,17 @@ def index():
                 except:
                     commentHead = 'No Comment Heading'
                 try:
-                    comtag = commentbox.div.div.find_all('div', {'class': ''})
+                    # comtag = commentbox.div.div.find_all('div', {'class': ''})
+                    comtag = commentbox.div.div.div.text[1:]
                     #custComment.encode(encoding='utf-8')
-                    custComment = comtag[0].div.text
+                    custComment = comtag
                 except Exception as e:
                     print("Exception while creating dictionary: ",e)
 
-                mydict = {"Product": searchString, "Name": name, "Rating": rating, "CommentHead": commentHead,
+                mydict = {"Product": searchString, "Name": name, "Rating": rating,
                           "Comment": custComment}
                 reviews.append(mydict)
-            return render_template('results.html', reviews=reviews[0:(len(reviews)-1)])
+            return render_template('results.html', reviews=reviews[0:(len(reviews))])
         except Exception as e:
             print('The Exception message is: ',e)
             return 'something is wrong'
@@ -79,5 +86,5 @@ def index():
         return render_template('index.html')
 
 if __name__ == "__main__":
-    #app.run(host='127.0.0.1', port=8001, debug=True)
-	app.run(debug=True)
+    app.run(host='127.0.0.1', port=8001, debug=True)
+	# app.run(debug=True)
